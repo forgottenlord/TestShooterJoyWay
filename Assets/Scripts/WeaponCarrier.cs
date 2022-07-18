@@ -29,8 +29,8 @@ namespace TestShooter
             while (diff.magnitude > .3f)
             {
                 diff = _weapon.transform.position - transform.position;
-                _weapon.transform.position -= diff * Time.deltaTime;
-                yield return new WaitForSeconds(Time.deltaTime);
+                _weapon.transform.position -= diff * Time.fixedDeltaTime;
+                yield return new WaitForSeconds(Time.fixedDeltaTime);
             }
             weapon.transform.SetParent(transform);
             weapon.transform.localPosition = new Vector3();

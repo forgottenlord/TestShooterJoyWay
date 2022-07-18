@@ -20,60 +20,51 @@ namespace TestShooter
         private WeaponCarrier RightHand;
         [SerializeField]
         private PlayerInput _input;
+        public InputActionReference triggerAction;
         private void Awake()
         {
             Cursor.lockState = CursorLockMode.Locked;
             CameraGO = transform.GetChild(0).transform;
-                        
-            /*foreach (var a in _input.actions.actionMaps)
-                Debug.Log(a.name);*/
+            mouse = Mouse.current;
+            keyboard = Keyboard.current;
         }
+        Mouse mouse;
+        Keyboard keyboard;
         private void Update()
         {
-            TakeDrop(KeyCode.Q, LeftHand);
-            TakeDrop(KeyCode.E, RightHand);
-            ShootWeapon(0, LeftHand);
-            ShootWeapon(2, RightHand);
+            MouseLook(Mouse.current.delta.ReadValue());
             transform.position += WASD() * Time.deltaTime;
-            MouseLook();
+            if (mouse.leftButton.wasPressedThisFrame) ShootWeapon(LeftHand);
+            if (mouse.rightButton.wasPressedThisFrame) ShootWeapon(RightHand);
+            if (keyboard.qKey.wasPressedThisFrame) TakeDrop(LeftHand);
+            if (keyboard.eKey.wasPressedThisFrame) TakeDrop(RightHand);
         }
-        /*private void OnEnable()
-        {
-            _input.ActivateInput();
-
-        }
-        private void OnDisable()
-        {
-            _input.DeactivateInput();
-        }*/
         private Vector3 WASD()
         {
             Vector3 delta = new Vector3();
-            delta += Input.GetKey(KeyCode.W) ? transform.forward : new Vector3();
-            delta -= Input.GetKey(KeyCode.S) ? transform.forward : new Vector3();
-            delta -= Input.GetKey(KeyCode.A) ? transform.right : new Vector3();
-            delta += Input.GetKey(KeyCode.D) ? transform.right : new Vector3();
+            delta += keyboard.wKey.isPressed ? transform.forward : new Vector3();
+            delta -= keyboard.sKey.isPressed ? transform.forward : new Vector3();
+            delta -= keyboard.aKey.isPressed ? transform.right : new Vector3();
+            delta += keyboard.dKey.isPressed ? transform.right : new Vector3();
             return delta;
         }
-        private void MouseLook()
+        private void MouseLook(Vector2 mouseNewPos)
         {
-            rotationX += Input.GetAxis("Mouse X") * sensitivityX;
-            rotationY += Input.GetAxis("Mouse Y") * sensitivityY;
+            rotationX += mouseNewPos.x;
+            rotationY -= mouseNewPos.y;
             rotationY = Mathf.Clamp(rotationY, minimumY, maximumY);
             transform.eulerAngles = new Vector3(0, rotationX, 0);
             CameraGO.localEulerAngles = new Vector3(rotationY, 0, 0);
+            Debug.Log("mouseNewPos" + mouseNewPos);
         }
-        private void ShootWeapon(int mouseButtonNum, WeaponCarrier weaponCarrier)
+        private void ShootWeapon(WeaponCarrier weaponCarrier)
         {
-            if (!Input.GetMouseButtonDown(mouseButtonNum)) return;
             if (!weaponCarrier.IsEmpty()) weaponCarrier.ShootWeapon();
         }
-        private void TakeDrop(KeyCode keyCode, WeaponCarrier weaponCarrier)
+        private void TakeDrop(WeaponCarrier weaponCarrier)
         {
-            if (!Input.GetKeyDown(keyCode)) return;
             if (weaponCarrier.IsEmpty())
             {
-                //RaycastHit[] hits = Physics.SphereCastAll(weaponCarrier.transform.position, 2f, weaponCarrier.transform.forward);
                 RaycastHit[] hits = Physics.RaycastAll(CameraGO.transform.position, CameraGO.transform.forward, 3f);
                 Weapon weapon = null;
                 foreach (var hit in hits)
